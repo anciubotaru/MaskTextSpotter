@@ -1,8 +1,8 @@
-import os
 import cv2
 import torch
 from torchvision import transforms as T
 
+print("cuda avail", torch.cuda.is_available())
 from maskrcnn_benchmark.modeling.detector import build_detection_model
 from maskrcnn_benchmark.utils.checkpoint import DetectronCheckpointer
 from maskrcnn_benchmark.structures.image_list import to_image_list
@@ -24,7 +24,7 @@ class TextDemo(object):
         self.cfg = cfg.clone()
         self.model = build_detection_model(cfg)
         self.model.eval()
-        self.device = torch.device(cfg.MODEL.DEVICE)
+        self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.model.to(self.device)
         self.min_image_size = min_image_size
 

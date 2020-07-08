@@ -69,7 +69,7 @@ def project_char_masks_on_boxes(segmentation_masks, segmentation_char_masks, pro
     # TODO put the proposals on the CPU, as the representation for the
     # masks is not efficient GPU-wise (possibly several small tensors for
     # representing a single instance mask)
-    proposals = proposals.bbox.to(torch.device("cpu"))
+    proposals = proposals.bbox.to("cuda" if torch.cuda.is_available() else "cpu")
     for segmentation_mask, segmentation_char_mask, proposal in zip(segmentation_masks, segmentation_char_masks, proposals):
         # crop the masks, resize them to the desired resolution and
         # then convert them to the tensor representation,

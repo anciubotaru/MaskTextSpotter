@@ -36,6 +36,7 @@ def main():
 
     args = parser.parse_args()
 
+    device = "cpu" #torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     num_gpus = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
     distributed = num_gpus > 1
 
@@ -58,7 +59,7 @@ def main():
     logger.info("\n" + collect_env_info())
 
     model = build_detection_model(cfg)
-    model.to(cfg.MODEL.DEVICE)
+    model.to(device)
 
     checkpointer = DetectronCheckpointer(cfg, model)
     _ = checkpointer.load(cfg.MODEL.WEIGHT)
@@ -81,7 +82,7 @@ def main():
             data_loader_val,
             iou_types=iou_types,
             box_only=cfg.MODEL.RPN_ONLY,
-            device=cfg.MODEL.DEVICE,
+            device=device,
             expected_results=cfg.TEST.EXPECTED_RESULTS,
             expected_results_sigma_tol=cfg.TEST.EXPECTED_RESULTS_SIGMA_TOL,
             output_folder=output_folder,
