@@ -28,7 +28,7 @@ from maskrcnn_benchmark.utils.miscellaneous import mkdir
 
 def train(cfg, local_rank, distributed):
     model = build_detection_model(cfg)
-    device = "cpu" # torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     model.to(device)
 
     optimizer = make_optimizer(cfg, model)
@@ -80,7 +80,7 @@ def train(cfg, local_rank, distributed):
 
 
 def test(cfg, model, distributed):
-    device = "cpu" #torch.device("cuda") if torch.cuda.is_available else torch.device("cpu")
+    device = torch.device("cuda") if torch.cuda.is_available else torch.device("cpu")
     if distributed:
         model = model.module
     torch.cuda.empty_cache()  # TODO check if it helps
