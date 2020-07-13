@@ -360,7 +360,6 @@ def inference(
 	model_name=None,
 	cfg=None
 ):
-
 	# convert to a torch.device for efficiency
 	model_name = model_name.split('.')[0] + '_' + str(cfg.INPUT.MIN_SIZE_TEST)
 	predictions_path = os.path.join(output_folder, model_name + '_predictions.pth')

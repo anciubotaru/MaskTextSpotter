@@ -1,4 +1,7 @@
+from pathlib import Path
+
 import cv2
+
 import torch
 from torchvision import transforms as T
 
@@ -85,6 +88,9 @@ class TextDemo(object):
         # compute predictions
         with torch.no_grad():
             predictions = self.model(image_list)
+
+        if predictions is None:
+            return None, None
         global_predictions = predictions[0]
         char_predictions = predictions[1]
         char_mask = char_predictions['char_mask']
@@ -215,6 +221,11 @@ def main(args):
     # manual override some options
     # cfg.merge_from_list(["MODEL.DEVICE", "cpu"])
 
+    output_dir = Path(args.results_directory)
+
+    if not output_dir.exists():
+        output_dir.mkdir()
+
     text_demo = TextDemo(
         cfg,
         min_image_size=800,
@@ -222,16 +233,38 @@ def main(args):
         output_polygon=True
     )
     # load image and then run prediction
-    
-    image = cv2.imread(args.image_path)
-    result_polygons, result_words = text_demo.run_on_opencv_image(image)
-    text_demo.visualization(image, result_polygons, result_words)
-    cv2.imwrite(args.visu_path, image)
+
+    source_dir = Path(args.test_images_path)
+
+    correctly_recognised = 0
+    total_samples = 0
+
+    for image_path in source_dir.iterdir():
+        label = image_path.name.split("_")[1].split(".")[0]
+        image = cv2.imread(image_path.as_posix())
+        result_polygons, result_words = text_demo.run_on_opencv_image(image)
+
+        if result_words is not None:
+            if label in result_words:
+                correctly_recognised += 1
+                print("{}. label {} correctly identified in {}".format(correctly_recognised, label, result_words))
+            else:
+                print("Incorrect actual label {}, recognized {}".format(label, result_words))
+        total_samples += 1
+
+        if result_words is not None and result_polygons is not None:
+            text_demo.visualization(image, result_polygons, result_words)
+            cv2.imwrite((output_dir/image_path.name).as_posix(), image)
+
+    print("Accuracy={}% from total number {}".format(correctly_recognised/total_samples, total_samples))
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='parameters for demo')
     parser.add_argument("--config-file", type=str, default='configs/finetune.yaml')
     parser.add_argument("--image_path", type=str, default='./demo_images/demo.jpg')
     parser.add_argument("--visu_path", type=str, default='./demo_images/demo_results.jpg')
+    parser.add_argument("--test_images_path", type=str)
+    parser.add_argument("--results_directory", type=str, default='./results')
     args = parser.parse_args()
     main(args)
